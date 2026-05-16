@@ -17,62 +17,87 @@ interface RequestBody {
   history?: ChatMessage[];
 }
 
-// Función que Denti puede llamar para registrar citas
-const registerAppointmentFunction = {
-  name: "registrar_cita",
+// Tool: agendar cita directa (Antigravity style)
+const agendarCitaFunction = {
+  name: "agendar_cita_directa",
   description:
-    "Registra una cita en Ora Nova con los datos del paciente. Llama esta función SOLO cuando tengas TODOS los datos requeridos.",
+    "Registra una cita de valoración en Ora Nova. USA ESTA FUNCIÓN SOLO cuando tengas al menos NOMBRE, TELÉFONO y SERVICIO.",
   parameters: {
     type: "object",
     properties: {
-      nombre: {
+      name: {
         type: "string",
-        description: "Nombre completo del paciente",
+        description: "Nombre completo del paciente.",
       },
-      telefono: {
-        type: "string",
-        description: "Teléfono de contacto (WhatsApp)",
-      },
-      correo: {
-        type: "string",
-        description: "Correo electrónico del paciente",
-      },
-      fecha: {
-        type: "string",
-        description: "Fecha deseada para la cita (YYYY-MM-DD)",
-      },
-      hora: {
-        type: "string",
-        description: "Hora deseada para la cita (HH:MM)",
-      },
-      servicio: {
+      phone: {
         type: "string",
         description:
-          "Servicio de interés (Limpieza, Carillas, Implantes, Ortodoncia, Coronas, Resinas, Endodoncia, Consulta General)",
+          "Número de WhatsApp o teléfono del paciente (Imprescindible).",
+      },
+      service: {
+        type: "string",
+        description:
+          "Tratamiento de interés: Limpieza, Resinas, Endodoncia, Coronas, Implantes, Carillas, Ortodoncia, Consulta General.",
+      },
+      email: {
+        type: "string",
+        description:
+          "Correo electrónico del paciente (opcional pero recomendado).",
+      },
+      date: {
+        type: "string",
+        description:
+          "Fecha deseada para la cita (YYYY-MM-DD). Si no sabe, enviar 'Pendiente de confirmar telefónicamente'.",
+      },
+      time: {
+        type: "string",
+        description:
+          "Hora deseada (HH:MM). Si no sabe, enviar 'Pendiente de confirmar telefónicamente'.",
       },
     },
-    required: ["nombre", "telefono", "correo", "fecha", "hora", "servicio"],
+    required: ["name", "phone", "service"],
   },
 };
 
-async function sendToWebhook(data: {
-  nombre: string;
-  telefono: string;
-  correo: string;
-  fecha: string;
-  hora: string;
-  servicio: string;
-}): Promise<boolean> {
+async function sendToWebhook(data: Record<string, string>): Promise<boolean> {
   try {
+    // Generar wa_link automáticamente
+    const cleanedPhone = data.phone?.replace(/[^0-9]/g, "") || "";
+    const wa_link = cleanedPhone
+      ? `https://wa.me/${cleanedPhone}`
+      : "";
+
+    const payload = {
+      nombre: data.name || "",
+      telefono: data.phone || "",
+      correo: data.email || "",
+      fecha_cita: data.date || "Pendiente de confirmar telefónicamente",
+      hora_cita: data.time || "Pendiente de confirmar telefónicamente",
+      servicio: data.service || "",
+      wa_link,
+    };
+
     const res = await fetch(MAKE_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     return res.ok;
   } catch {
     return false;
   }
+}
+
+// Obtener fecha actual en RD (GMT-4)
+function getTodayStr(): string {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: "America/Santo_Domingo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  return now.toLocaleDateString("es-ES", options);
 }
 
 export async function POST(request: NextRequest) {
@@ -95,35 +120,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `Eres Denti, el asistente virtual de Ora Nova, una clínica dental de vanguardia.
+    const today = getTodayStr();
 
-ERES EMPÁTICO, PROFESIONAL Y AMIGABLE.
-TU OBJETIVO PRINCIPAL es recolectar los datos del paciente y REGISTRAR LA CITA directamente usando la función "registrar_cita". NO le digas al paciente que use un botón o formulario — TÚ mismo gestionas la cita.
+    const systemPrompt = `Eres Denti, el asistente virtual experto y empático de la clínica "Ora Nova".
+HOY ES: ${today}.
 
-BASE DE CONOCIMIENTOS:
-1. Servicios y Tratamientos:
-   - Limpieza Dental: Profilaxis con ultrasonido y pulido coronario.
-   - Resinas Compuestas: Restauración con material nanohíbrido.
-   - Endodoncia: Tratamiento de conductos bajo magnificación microscópica.
-   - Coronas: Recubrimiento total de zirconio o cerámica pura.
-   - Implantes Dentales: Dispositivos de titanio o zirconio.
-   - Carillas de Porcelana: Diseño de sonrisa con porcelana o resina.
-   - Ortodoncia: Brackets o alineadores invisibles (3D).
+TU OBJETIVO:
+Convertir visitantes en pacientes reales agendando citas de valoración de alta calidad.
 
-2. Precios y Presupuestos:
-   - NO DES PRECIOS EXACTOS por chat. Invita a una "Consulta de Valoración".
+ESTRATEGIA DE CAPTACIÓN:
+Para agendar una cita exitosa, NECESITAS obtener estos datos. No uses la herramienta "agendar_cita_directa" hasta que tengas al menos: NOMBRE, TELÉFONO y el SERVICIO (Limpieza, Carillas, etc.).
 
-3. Horarios:
-   - Lunes a Viernes: 9:00 AM - 6:00 PM.
-   - Sábados: 9:00 AM - 2:00 PM.
+CAMPOS A CAPTURAR:
+1. name: Nombre completo del paciente.
+2. phone: Número de WhatsApp o teléfono (Imprescindible para el equipo).
+3. service: ¿Qué tratamiento le interesa? (DEBES preguntarlo si no lo dice).
+4. email: Pídelo siempre. Si el usuario se niega, puedes continuar, pero intenta obtenerlo como contacto de respaldo.
+5. date / time: Pregunta si prefiere mañana o tarde, o una fecha específica. Si no sabe, pon "Pendiente de confirmar telefónicamente".
 
-REGLAS DE INTERACCIÓN:
-- Sé conciso y usa viñetas cuando corresponda.
-- NUNCA des diagnósticos médicos.
-- Mantén un tono positivo y tranquilizador.
-- Cuando alguien quiera agendar, pídele los datos UNO POR UNO de forma natural.
-- Cuando tengas TODOS los datos (nombre, teléfono, correo, fecha, hora, servicio), USA la función "registrar_cita" para crear la cita automáticamente.
-- Después de registrar la cita, confirma al paciente que su cita ha sido agendada.`;
+BASE DE CONOCIMIENTOS (Servicios):
+- Limpieza Dental: Profilaxis con ultrasonido y pulido coronario.
+- Resinas Compuestas: Restauración con material nanohíbrido.
+- Endodoncia: Tratamiento de conductos bajo magnificación microscópica.
+- Coronas: Recubrimiento total de zirconio o cerámica pura.
+- Implantes Dentales: Dispositivos de titanio o zirconio.
+- Carillas de Porcelana: Diseño de sonrisa con porcelana o resina.
+- Ortodoncia: Brackets o alineadores invisibles (3D).
+
+HORARIOS:
+- Lunes a Viernes: 9:00 AM - 6:00 PM.
+- Sábados: 9:00 AM - 2:00 PM.
+
+REGLAS DE ORO:
+1. Identidad: Eres la voz de "Ora Nova". Profesionalismo ante todo.
+2. Calidad de Lead: Un lead sin servicio de interés es un lead flojo. ¡Pregunta siempre qué necesitan!
+3. Confirmación: Antes de usar la herramienta, confirma los datos con el usuario brevemente.
+4. Tono: Amable, pero orientado a cerrar la cita.
+5. NUNCA des diagnósticos médicos ni precios exactos.
+6. Sé conciso y usa viñetas cuando corresponda.`;
 
     // Construir historial
     const contents: { role: string; parts: { text: string }[] }[] = [];
@@ -135,7 +169,7 @@ REGLAS DE INTERACCIÓN:
       });
     }
 
-    // Mensaje actual
+    // Mensaje actual del usuario
     contents.push({
       role: "user",
       parts: [{ text: message }],
@@ -151,7 +185,7 @@ REGLAS DE INTERACCIÓN:
         contents,
         tools: [
           {
-            functionDeclarations: [registerAppointmentFunction],
+            functionDeclarations: [agendarCitaFunction],
           },
         ],
         tool_config: {
@@ -166,14 +200,8 @@ REGLAS DE INTERACCIÓN:
           topK: 40,
         },
         safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_NONE",
-          },
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
           {
             category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
             threshold: "BLOCK_NONE",
@@ -198,26 +226,18 @@ REGLAS DE INTERACCIÓN:
     const data = await response.json();
     const candidate = data?.candidates?.[0];
 
-    // Verificar si Gemini llamó a la función registrar_cita
-    const functionCall =
-      candidate?.content?.parts?.[0]?.functionCall;
+    // Verificar si Gemini llamó a la función agendar_cita_directa
+    const functionCall = candidate?.content?.parts?.[0]?.functionCall;
 
-    if (functionCall?.name === "registrar_cita") {
-      const args = functionCall.args as {
-        nombre: string;
-        telefono: string;
-        correo: string;
-        fecha: string;
-        hora: string;
-        servicio: string;
-      };
+    if (functionCall?.name === "agendar_cita_directa") {
+      const args = functionCall.args as Record<string, string>;
 
       // Enviar al webhook de Make
       const success = await sendToWebhook(args);
 
       if (success) {
         // Devolver resultado a Gemini para que confirme al usuario
-        const functionResponse = await fetch(
+        const funcResponse = await fetch(
           `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
           {
             method: "POST",
@@ -233,8 +253,8 @@ REGLAS DE INTERACCIÓN:
                   parts: [
                     {
                       functionCall: {
-                        name: "registrar_cita",
-                        args: args,
+                        name: "agendar_cita_directa",
+                        args,
                       },
                     },
                   ],
@@ -244,10 +264,10 @@ REGLAS DE INTERACCIÓN:
                   parts: [
                     {
                       functionResponse: {
-                        name: "registrar_cita",
+                        name: "agendar_cita_directa",
                         response: {
                           success: true,
-                          message: `Cita registrada exitosamente para ${args.nombre} el ${args.fecha} a las ${args.hora} para ${args.servicio}.`,
+                          message: `Cita registrada exitosamente.`,
                         },
                       },
                     },
@@ -262,8 +282,8 @@ REGLAS DE INTERACCIÓN:
           }
         );
 
-        if (functionResponse.ok) {
-          const resultData = await functionResponse.json();
+        if (funcResponse.ok) {
+          const resultData = await funcResponse.json();
           const confirmationText =
             resultData?.candidates?.[0]?.content?.parts?.[0]?.text ||
             "¡Tu cita ha sido agendada exitosamente! Te esperamos en Ora Nova.";
