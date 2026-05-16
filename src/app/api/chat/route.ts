@@ -74,6 +74,8 @@ async function sendToWebhook(data: Record<string, string>): Promise<boolean> {
       fecha: data.date || "Pendiente de confirmar telefónicamente",
       hora: data.time || "Pendiente de confirmar telefónicamente",
       servicio: data.service || "",
+      origen: "Denti Chatbot",
+      estado: "PENDIENTE",
       wa_link,
     };
 
