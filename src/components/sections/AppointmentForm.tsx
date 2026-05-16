@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Calendar, Clock, CheckCircle } from "lucide-react";
 import CTAButton from "@/components/shared/CTAButton";
@@ -38,6 +38,14 @@ export default function AppointmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Escuchar evento desde Navbar para abrir el formulario directo
+  useEffect(() => {
+    const handler = () => setIsOpen(true);
+    window.addEventListener("open-contact-modal", handler);
+    return () => window.removeEventListener("open-contact-modal", handler);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

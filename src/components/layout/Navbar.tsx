@@ -9,7 +9,7 @@ const navLinks = [
   { href: "#hero", label: "Inicio" },
   { href: "#especialidades", label: "Especialidades" },
   { href: "#doctores", label: "Doctores" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "#contacto", label: "Contacto", openForm: true },
 ];
 
 export default function Navbar() {
@@ -23,6 +23,12 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const openForm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent("open-contact-modal"));
+    setIsOpen(false);
+  };
 
   return (
     <nav
@@ -50,17 +56,18 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={link.openForm ? openForm : undefined}
                 className="text-sm text-text-secondary hover:text-accent transition-colors duration-300 font-medium tracking-wide uppercase"
               >
                 {link.label}
               </a>
             ))}
-            <a
-              href="#contacto"
-              className="px-5 py-2.5 rounded-full bg-accent text-dark text-sm font-semibold hover:shadow-glow transition-all duration-300 active:scale-95"
+            <button
+              onClick={openForm}
+              className="px-5 py-2.5 rounded-full bg-accent text-dark text-sm font-semibold hover:shadow-glow transition-all duration-300 active:scale-95 cursor-pointer"
             >
               Agendar Cita
-            </a>
+            </button>
           </div>
 
           {/* Mobile Hamburger */}
@@ -89,7 +96,7 @@ export default function Navbar() {
                 <motion.a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={link.openForm ? openForm : (e) => { e.preventDefault(); setIsOpen(false); }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
@@ -98,16 +105,15 @@ export default function Navbar() {
                   {link.label}
                 </motion.a>
               ))}
-              <motion.a
-                href="#contacto"
-                onClick={() => setIsOpen(false)}
+              <motion.button
+                onClick={openForm}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
-                className="block text-center px-5 py-3 rounded-full bg-accent text-dark font-semibold hover:shadow-glow transition-all duration-300"
+                className="block w-full text-center px-5 py-3 rounded-full bg-accent text-dark font-semibold hover:shadow-glow transition-all duration-300 cursor-pointer"
               >
                 Agendar Cita
-              </motion.a>
+              </motion.button>
             </div>
           </motion.div>
         )}
