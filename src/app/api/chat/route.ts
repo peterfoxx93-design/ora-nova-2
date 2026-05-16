@@ -26,24 +26,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `Eres Denti, el asistente virtual de Ora Nova Dental Clinic. 
-Eres amable, profesional y conoces todos los servicios de la clínica:
-- Ortodoncia Invisible (alineadores transparentes)
-- Coronas de Zirconio (restauraciones estéticas)
-- Carillas de Porcelana (transformación de sonrisa)
-- Implantes de Titanio (reemplazo de dientes)
-- Blanqueamiento Dental
-- Consulta General
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY no está configurada");
+      return NextResponse.json(
+        { error: "Configuración del asistente incompleta" },
+        { status: 500 }
+      );
+    }
 
-La clínica está ubicada en Av. Reforma 250, Col. Juárez, CDMX.
-Teléfono: +52 (55) 1234-5678
-Horario: Lun-Vie 9:00-19:00, Sáb 9:00-14:00
+    const systemPrompt = `Eres Denti, el asistente virtual de Ora Nova, una clínica dental de vanguardia.
 
-Responde siempre en español, sé breve y amable. Si te preguntan por costos, menciona que ofrecen una consulta gratuita donde se realiza un presupuesto personalizado. Invita a agendar una cita usando el formulario en la página.`;
+ERES EMPÁTICO, PROFESIONAL Y AMIGABLE.
+Tu objetivo es responder dudas de los pacientes y guiarlos a agendar una cita usando el botón "Agendar Cita" de la pantalla.
 
-    const contents = [];
+BASE DE CONOCIMIENTOS:
+1. Servicios y Tratamientos:
+   - Limpieza Dental: Profilaxis con ultrasonido y pulido coronario.
+   - Resinas Compuestas: Restauración con material nanohíbrido.
+   - Endodoncia: Tratamiento de conductos bajo magnificación microscópica.
+   - Coronas: Recubrimiento total de zirconio o cerámica pura.
+   - Implantes Dentales: Dispositivos de titanio o zirconio.
+   - Carillas de Porcelana: Diseño de sonrisa con porcelana o resina.
+   - Ortodoncia: Brackets o alineadores invisibles (3D).
 
-    // Add history
+2. Precios y Presupuestos:
+   - NO DES PRECIOS EXACTOS por chat.
+   - Invita siempre a una "Consulta de Valoración" presencial.
+
+3. Horarios:
+   - Lunes a Viernes: 9:00 AM - 6:00 PM.
+   - Sábados: 9:00 AM - 2:00 PM.
+
+REGLAS DE INTERACCIÓN:
+- Sé conciso y usa viñetas cuando corresponda.
+- NUNCA des diagnósticos médicos.
+- Mantén un tono positivo y tranquilizador.
+- Siempre termina invitando a hacer clic en "Agendar Cita".`;
+
+    // Construir historial correctamente para Gemini
+    const contents: { role: string; parts: { text: string }[] }[] = [];
+
     for (const msg of history) {
       contents.push({
         role: msg.role === "assistant" ? "model" : "user",
@@ -51,7 +73,7 @@ Responde siempre en español, sé breve y amable. Si te preguntan por costos, me
       });
     }
 
-    // Add current message
+    // Mensaje actual del usuario
     contents.push({
       role: "user",
       parts: [{ text: message }],
@@ -61,13 +83,11 @@ Responde siempre en español, sé breve y amable. Si te preguntan por costos, me
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: systemPrompt }],
-          },
-          ...contents,
-        ],
+        // ✅ System instruction va en campo separado, NO como mensaje de usuario
+        system_instruction: {
+          parts: [{ text: systemPrompt }],
+        },
+        contents,
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 500,
@@ -75,22 +95,10 @@ Responde siempre en español, sé breve y amable. Si te preguntan por costos, me
           topK: 40,
         },
         safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_NONE",
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_NONE",
-          },
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
         ],
       }),
     });
