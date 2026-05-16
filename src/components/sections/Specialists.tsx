@@ -8,7 +8,7 @@ import CTAButton from "@/components/shared/CTAButton";
 
 const doctors = [
   {
-    name: "Dr. Alejandro Sanz",
+    name: "Dra. Guadalupe Rodríguez",
     specialty: "ODONTOLOGÍA & CIRUGÍA",
     image: "/images/doctor-1.jpg",
     description:
