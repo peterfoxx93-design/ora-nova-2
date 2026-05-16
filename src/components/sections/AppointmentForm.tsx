@@ -223,7 +223,9 @@ export default function AppointmentForm() {
                         required
                         value={formData.telefono}
                         onChange={handleChange}
-                        placeholder="+52 55 1234 5678"
+                        placeholder="(809)000-0000"
+                        pattern="\(\d{3}\)\d{3}-\d{4}"
+                        title="Formato: (809)000-0000"
                         className="w-full px-4 py-3 rounded-xl bg-glass border border-glass-border text-white placeholder:text-text-secondary/50 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 transition-all duration-300"
                       />
                     </div>

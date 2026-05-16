@@ -12,7 +12,7 @@ const specialties = [
     description:
       "Alineadores transparentes personalizados que corrigen la posición dental sin brackets. Discreto, cómodo y altamente efectivo.",
     icon: Smile,
-    image: "/images/procedure-implant.jpg",
+    image: "/images/procedure-ortho.jpg",
     size: "tall" as const,
   },
   {

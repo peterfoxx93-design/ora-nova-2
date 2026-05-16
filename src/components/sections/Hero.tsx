@@ -41,7 +41,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.1] mb-6 sm:mb-8"
         >
-          Arte en
+          El Arte de la
           <br />
           <span className="text-accent">Odontología</span>
         </motion.h1>
@@ -61,7 +61,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          <CTAButton href="#contacto" size="lg">
+          <CTAButton onClick={() => window.dispatchEvent(new CustomEvent("open-contact-modal"))} size="lg">
             Agendar Cita
           </CTAButton>
         </motion.div>

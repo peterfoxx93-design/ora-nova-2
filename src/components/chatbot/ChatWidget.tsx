@@ -76,6 +76,8 @@ export default function ChatWidget() {
       ]);
     } finally {
       setIsLoading(false);
+      // Mantener el foco en el input después de enviar
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
