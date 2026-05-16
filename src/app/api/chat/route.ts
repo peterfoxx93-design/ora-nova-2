@@ -71,8 +71,8 @@ async function sendToWebhook(data: Record<string, string>): Promise<boolean> {
       nombre: data.name || "",
       telefono: data.phone || "",
       correo: data.email || "",
-      fecha_cita: data.date || "Pendiente de confirmar telefónicamente",
-      hora_cita: data.time || "Pendiente de confirmar telefónicamente",
+      fecha: data.date || "Pendiente de confirmar telefónicamente",
+      hora: data.time || "Pendiente de confirmar telefónicamente",
       servicio: data.service || "",
       wa_link,
     };
