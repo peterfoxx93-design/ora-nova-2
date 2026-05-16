@@ -19,13 +19,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Ora Nova | Artistry in Dentistry",
+  title: "Ora Nova | Arte en Odontología",
   description:
-    "Odontología estética de precisión en CDMX. Ortodoncia invisible, carillas de porcelana, coronas de zirconio e implantes de titanio.",
+    "Odontología estética de precisión. Transformamos sonrisas con tecnología de vanguardia en República Dominicana.",
   keywords:
-    "dentista, odontología estética, CDMX, ortodoncia invisible, carillas, implantes dentales",
+    "dentista, odontología estética, RD, ortodoncia invisible, carillas, implantes dentales",
   openGraph: {
-    title: "Ora Nova | Artistry in Dentistry",
+    title: "Ora Nova | Arte en Odontología",
     description:
       "Donde la ciencia se encuentra con el arte. Transformamos sonrisas con tecnología de vanguardia.",
     type: "website",
