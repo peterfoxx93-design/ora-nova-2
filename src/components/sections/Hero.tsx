@@ -41,9 +41,9 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.1] mb-6 sm:mb-8"
         >
-          Artistry in
+          Arte en
           <br />
-          <span className="text-accent">Dentistry</span>
+          <span className="text-accent">Odontología</span>
         </motion.h1>
 
         <motion.p
