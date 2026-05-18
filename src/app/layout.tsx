@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ChatWidget from "@/components/chatbot/ChatWidget";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,6 +46,10 @@ export default function RootLayout({
         <main>{children}</main>
         <Footer />
         <ChatWidget />
+        <Script
+          src="//code.tidio.co/rclukxronyr8tykqddll6kbe2wyeanoe.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
