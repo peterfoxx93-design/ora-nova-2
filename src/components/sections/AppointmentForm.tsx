@@ -60,16 +60,22 @@ export default function AppointmentForm() {
     setError("");
 
     try {
-      const response = await fetch(
+      const webhooks = [
+        "https://hook.us2.make.com/cpi7mx86y59653ga58qpfwi3j885el2a",
         "https://hook.us2.make.com/tyo1apd5sw4bed62almhmszjyl5b3mgc",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) throw new Error("Error al enviar el formulario");
+      ];
+      let response: Response | null = null;
+      for (const url of webhooks) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          if (res.ok) { response = res; break; }
+        } catch { continue; }
+      }
+      if (!response) throw new Error("Error al enviar el formulario");
 
       setIsSubmitted(true);
       setTimeout(() => {

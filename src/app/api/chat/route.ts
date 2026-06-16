@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
-const MAKE_WEBHOOK_URL =
-  "https://hook.us2.make.com/tyo1apd5sw4bed62almhmszjyl5b3mgc";
+const MAKE_WEBHOOK_URLS = [
+  "https://hook.us2.make.com/cpi7mx86y59653ga58qpfwi3j885el2a",
+  "https://hook.us2.make.com/tyo1apd5sw4bed62almhmszjyl5b3mgc",
+];
+
+async function sendToMakeWebhook(data: any): Promise<Response | null> {
+  for (const url of MAKE_WEBHOOK_URLS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        return res;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
 
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
@@ -79,12 +99,8 @@ async function sendToWebhook(data: Record<string, string>): Promise<boolean> {
       wa_link,
     };
 
-    const res = await fetch(MAKE_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    return res.ok;
+    const res = await sendToMakeWebhook(payload);
+    return res !== null && res.ok;
   } catch {
     return false;
   }
