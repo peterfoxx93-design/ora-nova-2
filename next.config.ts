@@ -8,6 +8,19 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "x-vercel-ai-enabled",
+            value: "false",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
